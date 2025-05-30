@@ -40,6 +40,11 @@ from performance_optimizations import (
 )
 from models.validation import GeoJSONValidation, IndicesRequest
 import magic
+from geojson_endpoints import (
+    create_vegetation_mask_polygons, create_indices_geojson_features,
+    get_image_bounds, validate_geojson_response
+)
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -294,6 +299,105 @@ async def detailed_health_check():
     except Exception as e:
         logger.error(f"Erreur lors de la vérification détaillée: {e}")
         raise HTTPException(status_code=500, detail=f"Erreur système: {str(e)}")
+
+@app.post("/calculate-indices-geojson")
+@limiter.limit("10/minute")
+async def calculate_indices_geojson(
+    request: Request,
+    geojson_file: UploadFile = File(...),
+    indices: str = Query("ndvi,ndwi", description="Indices à calculer (séparés par des virgules)"),
+    enhancement_method: str = Query("adaptive", description="Méthode d'amélioration des pixels"),
+    grid_size: int = Query(10, description="Taille de la grille pour les points GeoJSON")
+):
+    """Calculer les indices de végétation et retourner un GeoJSON avec points de données"""
+    try:
+        geojson_content = await geojson_file.read()
+        geojson_data = json.loads(geojson_content.decode('utf-8'))
+        
+        if not validate_geojson(geojson_data):
+            raise HTTPException(status_code=400, detail="Format GeoJSON invalide")
+        
+        config = get_secure_sentinelhub_config()
+        
+        if geojson_data["type"] == "Feature":
+            geometry_coords = geojson_data["geometry"]["coordinates"]
+        else:
+            geometry_coords = geojson_data["features"][0]["geometry"]["coordinates"]
+        
+        geometry = Geometry(geometry_coords, CRS.WGS84)
+        image = get_single_image(geometry, config)
+        
+        indices_list = [idx.strip().lower() for idx in indices.split(",")]
+        indices_data = vectorized_vegetation_indices(image, indices_list)
+        
+        if enhancement_method != "none":
+            for index_name in indices_data:
+                indices_data[index_name] = advanced_pixel_enhancement(
+                    indices_data[index_name], enhancement_method
+                )
+        
+        bounds = get_image_bounds(geometry_coords)
+        
+        features = create_indices_geojson_features(indices_data, bounds, grid_size)
+        
+        return validate_geojson_response(features)
+        
+    except Exception as e:
+        logger.error(f"Erreur lors du calcul des indices GeoJSON: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors du calcul: {str(e)}")
+
+@app.post("/calculate-masks-geojson")
+@limiter.limit("10/minute")
+async def calculate_masks_geojson(
+    request: Request,
+    geojson_file: UploadFile = File(...),
+    indices: str = Query("ndvi", description="Indices à calculer pour les masques"),
+    enhancement_method: str = Query("adaptive", description="Méthode d'amélioration des pixels"),
+    threshold_low: float = Query(0.2, description="Seuil bas pour la classification"),
+    threshold_high: float = Query(0.6, description="Seuil haut pour la classification")
+):
+    """Calculer les masques de végétation et retourner un GeoJSON avec polygones"""
+    try:
+        geojson_content = await geojson_file.read()
+        geojson_data = json.loads(geojson_content.decode('utf-8'))
+        
+        if not validate_geojson(geojson_data):
+            raise HTTPException(status_code=400, detail="Format GeoJSON invalide")
+        
+        config = get_secure_sentinelhub_config()
+        
+        if geojson_data["type"] == "Feature":
+            geometry_coords = geojson_data["geometry"]["coordinates"]
+        else:
+            geometry_coords = geojson_data["features"][0]["geometry"]["coordinates"]
+        
+        geometry = Geometry(geometry_coords, CRS.WGS84)
+        image = get_single_image(geometry, config)
+        
+        indices_list = [idx.strip().lower() for idx in indices.split(",")]
+        indices_data = vectorized_vegetation_indices(image, indices_list)
+        
+        if enhancement_method != "none":
+            for index_name in indices_data:
+                indices_data[index_name] = advanced_pixel_enhancement(
+                    indices_data[index_name], enhancement_method
+                )
+        
+        bounds = get_image_bounds(geometry_coords)
+        
+        all_features = []
+        for index_name, index_array in indices_data.items():
+            mask_features = create_vegetation_mask_polygons(
+                index_array, bounds, threshold_low, threshold_high, index_name
+            )
+            all_features.extend(mask_features)
+        
+        return validate_geojson_response(all_features)
+        
+    except Exception as e:
+        logger.error(f"Erreur lors du calcul des masques GeoJSON: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors du calcul: {str(e)}")
+
 
 if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")
