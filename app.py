@@ -11,6 +11,11 @@ matplotlib.use('Agg')
 os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query, Request
+from error_handling import (
+    CorrelationIDMiddleware, create_error_response, handle_validation_error,
+    handle_geojson_error, handle_sentinelhub_error, handle_processing_error,
+    handle_generic_error, enhanced_logger, get_correlation_id
+)
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -89,6 +94,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(CorrelationIDMiddleware)
+
 
 def validate_geojson(geojson_data: dict) -> bool:
     """Validation basique du GeoJSON"""
@@ -147,13 +154,26 @@ async def api_info():
         "version": "3.0.0",
         "description": "Calcul et visualisation d'indices de végétation avec amélioration des pixels",
         "endpoints": {
-            "/calculate-indices": "Calcul des indices de végétation",
+            "/calculate-indices": "Calcul des indices de végétation (format classique)",
+            "/calculate-indices-geojson": "Calcul des indices avec points GeoJSON pour Flutter",
+            "/calculate-masks-geojson": "Calcul des masques avec polygones GeoJSON pour Flutter",
             "/time-series": "Analyse de séries temporelles",
             "/enhancement-methods": "Liste des méthodes d'amélioration disponibles",
             "/health": "État de l'API"
         },
         "supported_indices": ["NDVI", "NDWI", "SAVI", "EVI"],
-        "enhancement_methods": ["adaptive", "super_resolution", "edge_preserving", "bilateral", "segmentation_based", "gaussian"]
+        "enhancement_methods": ["adaptive", "super_resolution", "edge_preserving", "bilateral", "segmentation_based", "gaussian"],
+        "flutter_support": {
+            "geojson_endpoints": ["/calculate-indices-geojson", "/calculate-masks-geojson"],
+            "coordinate_system": "WGS84",
+            "styling_properties": ["color", "vegetation_level", "index_type"],
+            "vegetation_classes": {
+                "no_vegetation": {"color": "#8d6e63", "threshold": "< 0.2"},
+                "sparse_vegetation": {"color": "#ffeb3b", "threshold": "0.2 - 0.4"},
+                "moderate_vegetation": {"color": "#8bc34a", "threshold": "0.4 - 0.6"},
+                "dense_vegetation": {"color": "#2e7d32", "threshold": "> 0.6"}
+            }
+        }
     }
 
 @app.post("/calculate-indices")
@@ -218,7 +238,14 @@ async def calculate_indices(
             "indices": results,
             "metadata": {
                 "image_shape": image.shape,
-                "enhancement_available": CV2_AVAILABLE or SKIMAGE_AVAILABLE
+                "enhancement_available": CV2_AVAILABLE or SKIMAGE_AVAILABLE,
+                "coordinate_system": "WGS84",
+                "bounds": get_image_bounds(geometry_coords),
+                "flutter_compatible": True,
+                "geojson_endpoints": {
+                    "points": "/calculate-indices-geojson",
+                    "masks": "/calculate-masks-geojson"
+                }
             }
         }
         

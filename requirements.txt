@@ -41,3 +41,6 @@ redis==5.0.1
 
 # Traitement asynchrone amélioré
 aiofiles==23.2.0
+
+# Testing dependencies
+httpx==0.28.1
