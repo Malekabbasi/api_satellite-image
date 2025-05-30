@@ -34,3 +34,10 @@ slowapi==0.1.9
 
 # Validation de fichiers
 python-magic==0.4.27
+
+# === ÉTAPE 4: OPTIMISATION DES PERFORMANCES ===
+# Redis pour mise en cache
+redis==5.0.1
+
+# Traitement asynchrone amélioré
+aiofiles==23.2.0

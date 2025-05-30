@@ -33,6 +33,11 @@ from services.satellite_service import get_sentinelhub_config, get_time_series_i
 from services.visualization_service import generate_enhanced_visualization, create_timelapse_animation, create_time_series_plot, s2_to_rgb
 from services.enhancement_service import advanced_pixel_enhancement
 from security_enhancements import validate_upload_file, validate_indices_request, get_secure_sentinelhub_config
+from performance_optimizations import (
+    cache_sentinelhub_request, vectorized_vegetation_indices, 
+    async_time_series_processing, memory_efficient_image_processing,
+    get_cache_stats, clear_cache
+)
 from models.validation import GeoJSONValidation, IndicesRequest
 import magic
 from dotenv import load_dotenv
