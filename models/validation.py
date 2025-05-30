@@ -54,7 +54,7 @@ class Geometry(BaseModel):
 
 class Feature(BaseModel):
     """Validation pour une feature GeoJSON"""
-    type: str = Field(..., regex="^Feature$")
+    type: str = Field(..., pattern="^Feature$")
     geometry: Geometry
     properties: Optional[Dict[str, Any]] = {}
     
@@ -66,7 +66,7 @@ class Feature(BaseModel):
 
 class FeatureCollection(BaseModel):
     """Validation pour une collection de features GeoJSON"""
-    type: str = Field(..., regex="^FeatureCollection$")
+    type: str = Field(..., pattern="^FeatureCollection$")
     features: List[Feature]
     
     @validator('features')
@@ -95,7 +95,7 @@ class GeoJSONValidation(BaseModel):
 class IndicesRequest(BaseModel):
     """Validation pour les requêtes de calcul d'indices"""
     indices: List[str] = Field(..., min_items=1, max_items=10)
-    enhancement_method: Optional[str] = Field(default="adaptive", regex="^(adaptive|super_resolution|edge_preserving|bilateral|segmentation_based|gaussian)$")
+    enhancement_method: Optional[str] = Field(default="adaptive", pattern="^(adaptive|super_resolution|edge_preserving|bilateral|segmentation_based|gaussian)$")
     
     @validator('indices')
     def validate_indices(cls, v):
@@ -107,8 +107,8 @@ class IndicesRequest(BaseModel):
 
 class TimeSeriesRequest(BaseModel):
     """Validation pour les requêtes de séries temporelles"""
-    start_date: str = Field(..., regex=r"^\d{4}-\d{2}-\d{2}$")
-    end_date: str = Field(..., regex=r"^\d{4}-\d{2}-\d{2}$")
+    start_date: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
+    end_date: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
     interval_days: int = Field(default=10, ge=1, le=30)
     indices: List[str] = Field(..., min_items=1, max_items=5)
     

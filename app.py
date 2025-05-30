@@ -116,7 +116,7 @@ def simple_vegetation_segmentation(ndvi: np.ndarray, threshold: float = 0.3) -> 
 async def health_check():
     """Vérification de l'état de l'API"""
     try:
-        config = get_sentinelhub_config()
+        config = get_secure_sentinelhub_config()
         return {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
@@ -162,7 +162,7 @@ async def calculate_indices(
         if not validate_geojson(geojson_data):
             raise HTTPException(status_code=400, detail="Format GeoJSON invalide")
         
-        config = get_sentinelhub_config()
+        config = get_secure_sentinelhub_config()
         
         if geojson_data["type"] == "Feature":
             geometry_coords = geojson_data["geometry"]["coordinates"]
@@ -263,7 +263,7 @@ async def get_enhancement_methods():
 async def detailed_health_check():
     """Vérification détaillée de l'état du système"""
     try:
-        config = get_sentinelhub_config()
+        config = get_secure_sentinelhub_config()
         
         return {
             "status": "healthy",

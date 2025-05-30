@@ -3,7 +3,11 @@
 
 import os
 import json
-import magic
+try:
+    import magic
+    MAGIC_AVAILABLE = True
+except ImportError:
+    MAGIC_AVAILABLE = False
 from typing import Dict, Any
 from fastapi import HTTPException, UploadFile
 from models.validation import GeoJSONValidation, IndicesRequest
@@ -14,9 +18,10 @@ load_dotenv()
 def validate_geojson_file(file_content: bytes) -> bool:
     """Validation stricte du fichier GeoJSON avec vérification du type MIME"""
     try:
-        mime_type = magic.from_buffer(file_content, mime=True)
-        if mime_type not in ['application/json', 'text/plain', 'application/geo+json']:
-            return False
+        if MAGIC_AVAILABLE:
+            mime_type = magic.from_buffer(file_content, mime=True)
+            if mime_type not in ['application/json', 'text/plain', 'application/geo+json']:
+                return False
         
         if len(file_content) > 10 * 1024 * 1024:
             return False
