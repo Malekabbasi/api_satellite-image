@@ -1,0 +1,26 @@
+# === ÉTAPE 1: DÉPENDANCES EXISTANTES (NE PAS TOUCHER) ===
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sentinelhub==3.9.1
+geopandas==0.14.1
+numpy==1.24.3
+matplotlib==3.7.2
+python-multipart==0.0.6
+arabic-reshaper==3.0.0
+python-bidi==0.4.2
+gunicorn==21.2.0
+Pillow==10.0.1
+requests==2.31.0
+fiona==1.9.5
+shapely==2.0.2
+pandas==2.1.3
+pyproj==3.6.1
+rasterio==1.3.9
+scipy==1.11.4
+
+# === ÉTAPE 2: NOUVELLES DÉPENDANCES (VERSIONS COMPATIBLES) ===
+# OpenCV version headless pour Docker
+opencv-python-headless==4.8.0.76
+
+# scikit-image version compatible avec vos autres libs
+scikit-image==0.20.0
