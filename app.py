@@ -27,6 +27,12 @@ import matplotlib.colors as mcolors
 from scipy.ndimage import gaussian_filter, median_filter, uniform_filter
 from scipy.interpolate import griddata
 from matplotlib.patches import Rectangle
+from services.indices_service import calculate_vegetation_indices_improved, calculate_masked_average
+from services.satellite_service import get_sentinelhub_config, get_time_series_images, get_single_image
+from services.visualization_service import generate_enhanced_visualization, create_timelapse_animation, create_time_series_plot, s2_to_rgb
+from services.enhancement_service import advanced_pixel_enhancement
+
+
 
 # Tentative d'importation des bibliothèques optionnelles pour l'amélioration
 try:
