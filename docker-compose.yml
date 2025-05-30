@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  vegetation-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - SENTINELHUB_INSTANCE_ID=${SENTINELHUB_INSTANCE_ID}
+      - SENTINELHUB_CLIENT_ID=${SENTINELHUB_CLIENT_ID}
+      - SENTINELHUB_CLIENT_SECRET=${SENTINELHUB_CLIENT_SECRET}
+      - MPLCONFIGDIR=/tmp
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./logs:/app/logs  # Optionnel : pour persister les logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Service optionnel pour un reverse proxy avec nginx
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    depends_on:
+      - vegetation-api
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    profiles:
+      - production
