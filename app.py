@@ -195,11 +195,11 @@ async def calculate_indices(
         config = get_secure_sentinelhub_config()
         
         if geojson_data["type"] == "Feature":
-            geometry_coords = geojson_data["geometry"]["coordinates"]
+            geometry_dict = geojson_data["geometry"]
         else:
-            geometry_coords = geojson_data["features"][0]["geometry"]["coordinates"]
+            geometry_dict = geojson_data["features"][0]["geometry"]
         
-        geometry = Geometry(geometry_coords, CRS.WGS84)
+        geometry = Geometry(geometry_dict, CRS.WGS84)
         
         image = get_single_image(geometry, config)
         
@@ -240,7 +240,7 @@ async def calculate_indices(
                 "image_shape": image.shape,
                 "enhancement_available": CV2_AVAILABLE or SKIMAGE_AVAILABLE,
                 "coordinate_system": "WGS84",
-                "bounds": get_image_bounds(geometry_coords),
+                "bounds": get_image_bounds(geometry_dict["coordinates"]),
                 "flutter_compatible": True,
                 "geojson_endpoints": {
                     "points": "/calculate-indices-geojson",
@@ -347,11 +347,11 @@ async def calculate_indices_geojson(
         config = get_secure_sentinelhub_config()
         
         if geojson_data["type"] == "Feature":
-            geometry_coords = geojson_data["geometry"]["coordinates"]
+            geometry_dict = geojson_data["geometry"]
         else:
-            geometry_coords = geojson_data["features"][0]["geometry"]["coordinates"]
+            geometry_dict = geojson_data["features"][0]["geometry"]
         
-        geometry = Geometry(geometry_coords, CRS.WGS84)
+        geometry = Geometry(geometry_dict, CRS.WGS84)
         image = get_single_image(geometry, config)
         
         indices_list = [idx.strip().lower() for idx in indices.split(",")]
@@ -363,7 +363,7 @@ async def calculate_indices_geojson(
                     indices_data[index_name], enhancement_method
                 )
         
-        bounds = get_image_bounds(geometry_coords)
+        bounds = get_image_bounds(geometry_dict["coordinates"])
         
         features = create_indices_geojson_features(indices_data, bounds, grid_size)
         
@@ -394,11 +394,11 @@ async def calculate_masks_geojson(
         config = get_secure_sentinelhub_config()
         
         if geojson_data["type"] == "Feature":
-            geometry_coords = geojson_data["geometry"]["coordinates"]
+            geometry_dict = geojson_data["geometry"]
         else:
-            geometry_coords = geojson_data["features"][0]["geometry"]["coordinates"]
+            geometry_dict = geojson_data["features"][0]["geometry"]
         
-        geometry = Geometry(geometry_coords, CRS.WGS84)
+        geometry = Geometry(geometry_dict, CRS.WGS84)
         image = get_single_image(geometry, config)
         
         indices_list = [idx.strip().lower() for idx in indices.split(",")]
@@ -410,7 +410,7 @@ async def calculate_masks_geojson(
                     indices_data[index_name], enhancement_method
                 )
         
-        bounds = get_image_bounds(geometry_coords)
+        bounds = get_image_bounds(geometry_dict["coordinates"])
         
         all_features = []
         for index_name, index_array in indices_data.items():
