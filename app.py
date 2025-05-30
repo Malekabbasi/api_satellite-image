@@ -32,6 +32,12 @@ from services.indices_service import calculate_vegetation_indices_improved, calc
 from services.satellite_service import get_sentinelhub_config, get_time_series_images, get_single_image
 from services.visualization_service import generate_enhanced_visualization, create_timelapse_animation, create_time_series_plot, s2_to_rgb
 from services.enhancement_service import advanced_pixel_enhancement
+from security_enhancements import validate_upload_file, validate_indices_request, get_secure_sentinelhub_config
+from models.validation import GeoJSONValidation, IndicesRequest
+import magic
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 try:
