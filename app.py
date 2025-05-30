@@ -33,6 +33,7 @@ from services.satellite_service import get_sentinelhub_config, get_time_series_i
 from services.visualization_service import generate_enhanced_visualization, create_timelapse_animation, create_time_series_plot, s2_to_rgb
 from services.enhancement_service import advanced_pixel_enhancement
 
+
 try:
     import cv2
     CV2_AVAILABLE = True
