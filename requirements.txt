@@ -24,3 +24,13 @@ opencv-python-headless==4.8.0.76
 
 # scikit-image version compatible avec vos autres libs
 scikit-image==0.20.0
+
+# === ÉTAPE 3: SÉCURITÉ ET VALIDATION ===
+# Pydantic pour validation stricte des données
+pydantic==2.5.0
+
+# Rate limiting pour FastAPI
+slowapi==0.1.9
+
+# Validation de fichiers
+python-magic==0.4.27
